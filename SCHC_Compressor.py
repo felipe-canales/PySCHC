@@ -62,9 +62,12 @@ class SCHC_Compressor:
         length_resto = length % 8
         mask = 0xFF
         buff = bytearray(length_cociente + (1 if length_resto else 0))
+        
+        # full bytes
         for i in range(length_cociente):
             struct.pack_into(">B", buff, i, (value >> (length_resto + (length_cociente - i - 1) * 8)) & mask)
 
+        # remaining bits
         if length_resto != 0:
             struct.pack_into(">B", buff, length_cociente, value << (8 - length_resto))
 

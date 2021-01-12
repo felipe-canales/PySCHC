@@ -5,14 +5,15 @@ from SCHC_RuleManager import SCHC_RuleManager
 from common import *
 
 rm_network = SCHC_RuleManager()
-rm_network.add_rule(rule_64)
-rm_network.add_rule(rule_32)
-rm_network.add_rule(rule_62)
-rm_network.add_rule(rule_63)
-rm_network.add_rule(rule_30)
-rm_network.add_rule(rule_31)
-rm_network.add_rule(rule_48)
-rm_network.add_rule(rule_16)
+#rm_network.add_rule(rule_64)
+#rm_network.add_rule(rule_32)
+#rm_network.add_rule(rule_62)
+#rm_network.add_rule(rule_63)
+#rm_network.add_rule(rule_30)
+#rm_network.add_rule(rule_31)
+#rm_network.add_rule(rule_48)
+#rm_network.add_rule(rule_16)
+rm_network.add_rule(rule_test)
 
 decompressor = SCHC_Decompressor(rm_network)
 

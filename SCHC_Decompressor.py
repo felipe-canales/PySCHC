@@ -86,6 +86,27 @@ class SCHC_Decompressor:
             udp_checksum = SCHC_Decompressor.checksum(ipv6_pseudo_header, self.headers["UDP.length"], self.headers["UDP.devPort"], self.headers["UDP.appPort"], buff)
             self.headers[fid] = udp_checksum
 
+    def __get_bits_left_aligned(self, data, length, offset):
+        i = offset // 8
+        bit_pos = offset % 8
+        remain = length % 8
+        mask = 0xFF
+        val = 0
+        
+        # full bytes
+        for _ in range(length // 8):
+            working_byte = ((data[i] << bit_pos) & mask) + (data[i+1] >> (8 - bit_pos))
+            val = (val << 8) + working_byte
+            i += 1
+
+        # reamining bits
+        if remain:
+            working_byte = ((data[i] << bit_pos) & mask) + (data[i+1] >> (8 - bit_pos))
+            val = (val << remain) + (working_byte >> (8 - remain))
+
+        return val
+
+
     def decompress(self, schc_packet, direction):
         # Get RuleID from SCHC Packet
         schc_packet_buff = list(schc_packet)
