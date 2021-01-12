@@ -27,23 +27,48 @@ class SCHC_Compressor:
             return None
 
     def ca_value_sent(self, length, tv, fv, mo):
+        return self.__left_align_bits(length, fv[0])
+
+    def ca_mapping_sent(self, length, tv, fv, mo):
+        max_index = -1
+        mapping = None
+        if type(tv) is dict:
+            for mappingID, mappingValue in tv.items():
+                if mappingValue == fv[0]:
+                    mapping = mappingID
+                if mappingID > max_index:
+                    max_index = mappingID
+        elif type(tv) is list:
+            max_index = len(tv) - 1
+            for i in range(len(tv)):
+                if tv[i] == fv[0]:
+                    mapping = i
+                    break
+        
+        length_resto = 0
+        while max_index > 0:
+            length_resto += 1
+            max_index >>= 1
+
+        return self.__left_align_bits(length_resto, mapping)
+
+    def ca_lsb(self, length, tv, fv, mo):
+        length_resto = length - tv[1]
+        val = fv[0] - (tv[0] << length_resto)
+        return self.__left_align_bits(length_resto, val)
+
+    def __left_align_bits(self, length, value):
         length_cociente = length // 8
         length_resto = length % 8
         mask = 0xFF
-        buff = bytearray(length_cociente + 1)
+        buff = bytearray(length_cociente + (1 if length_resto else 0))
         for i in range(length_cociente):
-            struct.pack_into(">B", buff, i, (fv[0]>>(length_resto + (length_cociente - i - 1) * 8)) & mask)
+            struct.pack_into(">B", buff, i, (value >> (length_resto + (length_cociente - i - 1) * 8)) & mask)
 
         if length_resto != 0:
-            struct.pack_into(">B", buff, length_cociente, fv[0]<<(8 - length_resto))
+            struct.pack_into(">B", buff, length_cociente, value << (8 - length_resto))
 
         return bytes(buff), length
-
-    def ca_mapping_sent(self, length, tv, fv, mo):
-        return
-
-    def ca_lsb(self, length, tv, fv, mo):
-        return
 
     def compress(self, package_full, direction):
         package = package_full[0]
@@ -85,5 +110,7 @@ class SCHC_Compressor:
                                 buffer[-1] += byte >> (offset % 8)
                                 buffer.append((byte << (8 - offset % 8)) & mask)
                         offset += res_length
-
-        return bytes(buffer)[:(offset+7) // 8]
+                        # (offset + 7) // 8 = ceiling(offset / 8)
+                        if len(buffer) > ((offset + 7) // 8):
+                            buffer.pop()
+        return bytes(buffer)
