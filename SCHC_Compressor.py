@@ -30,19 +30,14 @@ class SCHC_Compressor:
         length_cociente = length // 8
         length_resto = length % 8
         mask = 0xFF
-        buff = []
-        for i in range(0,length_cociente):
-            buff.append(struct.pack(">B",fv[0]>>(8*i) & mask))
+        buff = bytearray(length_cociente + 1)
+        for i in range(length_cociente):
+            struct.pack_into(">B", buff, i, (fv[0]>>(length_resto + (length_cociente - i - 1) * 8)) & mask)
 
         if length_resto != 0:
-            buff.append(struct.pack(">B", fv[0]>>length_cociente*8 & mask))
+            struct.pack_into(">B", buff, length_cociente, fv[0]<<(8 - length_resto))
 
-        # len(data) < 8
-        if length_cociente == 0:
-            return struct.pack(">B", fv[0])
-
-        buff.reverse()
-        return b''.join(buff)
+        return bytes(buff)
 
     def ca_mapping_sent(self, length, tv, fv, mo):
         return
