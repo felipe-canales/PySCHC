@@ -35,8 +35,8 @@ class SCHC_RuleManager:
             return False
 
     def mo_msb(self, length, fv, tv, cda):
-        # To Be Defined
-        pass
+        val, mask_size = tv
+        return (fv>>(length-mask_size) ^ val) == 0
 
     def get_rule_from_id(self, rule_id):
         for r in self.context:
