@@ -37,7 +37,7 @@ class SCHC_Compressor:
         if length_resto != 0:
             struct.pack_into(">B", buff, length_cociente, fv[0]<<(8 - length_resto))
 
-        return bytes(buff)
+        return bytes(buff), length
 
     def ca_mapping_sent(self, length, tv, fv, mo):
         return
@@ -65,6 +65,8 @@ class SCHC_Compressor:
 
     def calc_compression_residue(self, headers, rule, direction):
         buffer = []
+        offset = 0
+        mask = 0xFF
         for fd in rule["content"]:
             for header in headers:
                 if header[0] == fd[0] and (direction == fd[3] or fd[3] == 'Bi'):
@@ -75,5 +77,13 @@ class SCHC_Compressor:
                     cda = fd[6]
                     result = self.CompressionActions.get(cda)(length, tv, fv, mo)
                     if result is not None:
-                        buffer.append(result)
-        return b''.join(buffer)
+                        residue, res_length = result
+                        for byte in residue:
+                            if offset % 8 == 0:
+                                buffer.append(byte)
+                            else:
+                                buffer[-1] += byte >> (offset % 8)
+                                buffer.append((byte << (8 - offset % 8)) & mask)
+                        offset += res_length
+
+        return bytes(buffer)[:(offset+7) // 8]
