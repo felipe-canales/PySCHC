@@ -3,6 +3,7 @@ class SCHC_Parser:
     def __init__(self):
         self.header_fields = {}
         self.udp_data = []
+        self.unparsed_headers = []
 
     def parser(self, buffer):
         data_buffer = list(buffer)
@@ -30,6 +31,7 @@ class SCHC_Parser:
                 self.header_fields["UDP.length", 1] = [data_buffer[44] << 8 | data_buffer[45], "fixed"]
                 self.header_fields["UDP.checksum", 1] = [data_buffer[46] << 8 | data_buffer[47], "fixed"]
                 self.udp_data = [data_buffer[48:len(data_buffer)], "variable"]
+                self.unparsed_headers = data_buffer[:48]
 
             else:
                 print("Unsupported L4 protocol")

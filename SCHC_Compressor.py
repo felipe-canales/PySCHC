@@ -1,4 +1,5 @@
 import struct
+import binascii
 
 from SCHC_Parser import SCHC_Parser
 from SCHC_RuleManager import SCHC_RuleManager
@@ -73,8 +74,7 @@ class SCHC_Compressor:
 
         return bytes(buff), length
 
-    def compress(self, package_full, direction):
-        package = package_full[0]
+    def compress(self, package, direction):
         # Parsing Package
         self.parser.parser(package)
 
@@ -82,13 +82,22 @@ class SCHC_Compressor:
         rule_id = self.rule_manager.find_rule_from_headers(self.parser.header_fields, direction)
         rule_id_bf = struct.pack(">B", rule_id)
         if rule_id == SCHC_RuleManager.RULE_ID_NOT_COMPRESSED:
-            return b''.join([rule_id_bf, package_full[2]])
+            packet = b''.join([rule_id_bf, bytes(self.parser.unparsed_headers), bytes(self.parser.udp_data[0])])
 
-        # Get Compression Residue
-        comp_res_bf = self.calc_compression_residue(self.parser.header_fields, self.rule_manager.get_rule_from_id(rule_id), direction)
+        else:
+            # Get Compression Residue
+            comp_res_bf = self.calc_compression_residue(self.parser.header_fields, self.rule_manager.get_rule_from_id(rule_id), direction)
 
-        return b''.join([rule_id_bf, comp_res_bf])
+            packet = b''.join([rule_id_bf, comp_res_bf, bytes(self.parser.udp_data[0])])
 
+        print('SCHC Packet: ' + str(binascii.hexlify(packet)))
+        #print('Lenght SCHC Packet: ' + str(len(packet)))
+        print("Largo Headers sin comprimir: " + str(len(self.parser.unparsed_headers)) + " bytes")
+        print("Largo Headers comprimido: " + str(len(comp_res_bf)) + " bytes")
+        hc_len = len(comp_res_bf)
+        pkg_len = len(self.parser.unparsed_headers)
+        temp = (pkg_len - hc_len) * 100 / pkg_len
+        print('Porcentaje de compresion: %.2f%%' % temp)
 
 
     def calc_compression_residue(self, headers, rule, direction):
