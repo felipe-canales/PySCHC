@@ -19,48 +19,36 @@ class SCHC_Decompressor:
             "compute-checksum": self.da_compute_checksum
         }
 
-    def da_not_sent(self, fid, fl, fp, tv, schc_packet = None):
+    def da_not_sent(self, fid, fl, fp, tv, schc_packet = None, offset = 0):
         self.headers[fid] = tv
-        return True
+        return offset
 
-    def da_value_sent(self, fid, fl, fp, tv, schc_packet = None):
-        aux = schc_packet
-        aux.reverse()
-        length_cociente = fl // 8
-        length_resto = fl % 8
-        value_hex = ''
+    def da_value_sent(self, fid, fl, fp, tv, schc_packet = None, offset = 0):
+        self.headers[fid] = self.__get_bits(schc_packet, fl, offset)
+        return offset + fl
 
-        # len(data) < 8
-        if length_cociente == 0:
-            value = aux.pop()
-            value_bf = struct.pack('>B', value)
-            value_hex = value_hex + value_bf.hex()
-            aux.reverse()
-            temp = int(value_hex, 16)
-            self.headers[fid] = temp
-            return
+    def da_mapping_sent(self, fid, fl, fp, tv, schc_packet = None, offset = 0):
+        max_index = -1
+        value = None
+        if type(tv) is dict:
+            for mappingID, mappingValue in tv.items():
+                if mappingID > max_index:
+                    max_index = mappingID
+        elif type(tv) is list:
+            max_index = len(tv) - 1
+            
+        index_length = 0
+        while max_index > 0:
+            index_length += 1
+            max_index >>= 1
 
-        for i in range(0,length_cociente):
-            value = aux.pop()
-            value_bf = struct.pack('>B', value)
-            value_hex = value_hex + value_bf.hex()
+        self.headers[fid] = tv[self.__get_bits(schc_packet, index_length, offset)]
+        return offset + index_length
 
-        if length_resto != 0:
-            mask = 0xFF
-            value = aux.pop()
-            value_bf = struct.pack(">B", value)
-            value_hex = value_hex + value_bf.hex()
-
-        aux.reverse()
-        temp = int(value_hex,16)
-        self.headers[fid] = temp
-        return
-
-    def da_mapping_sent(self, fid, fl, fp, tv, schc_packet = None):
-        pass
-
-    def da_lsb(self, fid, fl, fp, tv, schc_packet = None):
-        pass
+    def da_lsb(self, fid, fl, fp, tv, schc_packet = None, offset = 0):
+        shift = fl - tv[1]
+        self.headers[fid] = (tv[0] << shift) + self.__get_bits(schc_packet, shift, offset)
+        return offset + shift
 
     def da_compute_length(self, fid, fl, fp, tv, schc_packet = None):
         if fid == "IPv6.payloadLength":
@@ -86,7 +74,7 @@ class SCHC_Decompressor:
             udp_checksum = SCHC_Decompressor.checksum(ipv6_pseudo_header, self.headers["UDP.length"], self.headers["UDP.devPort"], self.headers["UDP.appPort"], buff)
             self.headers[fid] = udp_checksum
 
-    def __get_bits_left_aligned(self, data, length, offset):
+    def __get_bits(self, data, length, offset):
         i = offset // 8
         bit_pos = offset % 8
         remain = length % 8
@@ -122,6 +110,7 @@ class SCHC_Decompressor:
 
     def builder(self, schc_packet, rule, direction):
         rules_calc = []
+        offset = 0
         rule_id = schc_packet.pop(0)
         for r in rule['content']:
             fid = r[0]
@@ -136,7 +125,7 @@ class SCHC_Decompressor:
                 continue
 
             if (di is 'Bi') or (di is direction):
-                self.DecompressionActions.get(cda)(fid, fl, fp, tv, schc_packet)
+                offset = self.DecompressionActions.get(cda)(fid, fl, fp, tv, schc_packet, offset)
 
         for r in rules_calc:
             fid = r[0]
