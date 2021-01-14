@@ -56,8 +56,8 @@ class SCHC_Compressor:
         return self.__left_align_bits(length_resto, mapping)
 
     def ca_lsb(self, length, tv, fv, mo):
-        length_resto = length - tv[1]
-        val = fv[0] - (tv[0] << length_resto)
+        length_resto = length - int(mo[4:-1]) # length - n_bits
+        val = fv[0] - (tv << length_resto)
         return self.__left_align_bits(length_resto, val)
 
     def __left_align_bits(self, length, value):
@@ -100,6 +100,8 @@ class SCHC_Compressor:
         pkg_len = len(self.parser.unparsed_headers)
         temp = (pkg_len - hc_len) * 100 / pkg_len
         print('Porcentaje de compresion: %.2f%%' % temp)
+
+        return packet
 
 
     def calc_compression_residue(self, headers, rule, direction):

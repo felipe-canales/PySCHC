@@ -150,7 +150,11 @@ class SCHC_RuleManager:
                         TV = content[4]
                         MO = content[5]
                         CDA = content[6]
-                        if not self.MatchingOperators.get(MO)(LENGTH, FV, TV, CDA):
+                        if MO[:3] == "MSB":
+                            if not self.MatchingOperators.get("MSB")(LENGTH, FV, TV, CDA, int(MO[4:-1])):
+                                MO_is_false = True
+                                break
+                        elif not self.MatchingOperators.get(MO)(LENGTH, FV, TV, CDA):
                             MO_is_false = True
                             break
 

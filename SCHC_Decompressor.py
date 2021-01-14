@@ -19,15 +19,15 @@ class SCHC_Decompressor:
             "compute-checksum": self.da_compute_checksum
         }
 
-    def da_not_sent(self, fid, fl, fp, tv, schc_packet = None, offset = 0):
+    def da_not_sent(self, fid, fl, fp, tv, mo, schc_packet = None, offset = 0):
         self.headers[fid] = tv
         return offset
 
-    def da_value_sent(self, fid, fl, fp, tv, schc_packet = None, offset = 0):
+    def da_value_sent(self, fid, fl, fp, tv, mo, schc_packet = None, offset = 0):
         self.headers[fid] = self.__get_bits(schc_packet, fl, offset)
         return offset + fl
 
-    def da_mapping_sent(self, fid, fl, fp, tv, schc_packet = None, offset = 0):
+    def da_mapping_sent(self, fid, fl, fp, tv, mo, schc_packet = None, offset = 0):
         max_index = -1
         value = None
         if type(tv) is dict:
@@ -45,9 +45,9 @@ class SCHC_Decompressor:
         self.headers[fid] = tv[self.__get_bits(schc_packet, index_length, offset)]
         return offset + index_length
 
-    def da_lsb(self, fid, fl, fp, tv, schc_packet = None, offset = 0):
-        shift = fl - tv[1]
-        self.headers[fid] = (tv[0] << shift) + self.__get_bits(schc_packet, shift, offset)
+    def da_lsb(self, fid, fl, fp, tv, mo, schc_packet = None, offset = 0):
+        shift = fl - int(mo[4:-1])
+        self.headers[fid] = (tv << shift) + self.__get_bits(schc_packet, shift, offset)
         return offset + shift
 
     def da_compute_length(self, fid, fl, fp, tv, schc_packet = None):
@@ -118,6 +118,7 @@ class SCHC_Decompressor:
             fp = r[2]
             di = r[3]
             tv = r[4]
+            mo = r[5]
             cda = r[6]
 
             if cda == 'compute-length' or cda == 'compute-checksum':
@@ -125,7 +126,7 @@ class SCHC_Decompressor:
                 continue
 
             if (di is 'Bi') or (di is direction):
-                offset = self.DecompressionActions.get(cda)(fid, fl, fp, tv, schc_packet, offset)
+                offset = self.DecompressionActions.get(cda)(fid, fl, fp, tv, mo, schc_packet, offset)
 
         for r in rules_calc:
             fid = r[0]
