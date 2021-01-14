@@ -70,7 +70,7 @@ class SCHC_Compressor:
 
         # remaining bits
         if length_resto != 0:
-            struct.pack_into(">B", buff, length_cociente, value << (8 - length_resto))
+            struct.pack_into(">B", buff, length_cociente, (value << (8 - length_resto)) & mask)
 
         return bytes(buff), length
 
