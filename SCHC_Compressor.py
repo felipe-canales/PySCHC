@@ -28,6 +28,8 @@ class SCHC_Compressor:
             return None
 
     def ca_value_sent(self, length, tv, fv, mo):
+        if mo != "ignore":
+            print("Warning: The CDA \"value-sent\" SHOULD be used with the \"ignore\" MO")
         return self.__left_align_bits(length, fv[0])
 
     def ca_mapping_sent(self, length, tv, fv, mo):
