@@ -26,6 +26,6 @@ print('Recibido')
 print('SCHC Packet: ' + str(binascii.hexlify(schc_packet)))
 print('Lenght SCHC Packet: ' + str(len(schc_packet)))
 
-decompressor.decompress(schc_packet, "Up")
+ip_packet = decompressor.decompress(schc_packet, "Up")
 
-#print('Paquete descomprimido: ' + str(binascii.hexlify(schc_packet)))
+print('Paquete descomprimido: ' + str(binascii.hexlify(ip_packet)))

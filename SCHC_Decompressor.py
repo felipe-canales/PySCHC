@@ -104,9 +104,9 @@ class SCHC_Decompressor:
         rule = self.rule_manager.get_rule_from_id(rule_id)
 
         # The package is reconstructed using the identifier of the rule
-        self.builder(schc_packet_buff, rule, direction)
+        ip_packet = self.builder(schc_packet_buff, rule, direction)
 
-        return
+        return ip_packet
 
     def shift_bytes(self, offset, array):
         mask = 0xFF
@@ -139,6 +139,8 @@ class SCHC_Decompressor:
             if (di is 'Bi') or (di is direction):
                 offset = self.DecompressionActions.get(cda)(fid, fl, fp, tv, mo, schc_packet, offset)
 
+        payload = self.shift_bytes(offset % 8, schc_packet[offset//8:])
+
         for r in rules_calc:
             fid = r[0]
             fl = r[1]
@@ -148,12 +150,9 @@ class SCHC_Decompressor:
             cda = r[6]
 
             if (di is 'Bi') or (di is direction):
-                self.DecompressionActions.get(cda)(fid, fl, fp, tv, schc_packet)
+                self.DecompressionActions.get(cda)(fid, fl, fp, tv, payload)
 
-        # do header
-        payload = self.shift_bytes(offset % 8, schc_packet[offset//8:])
-        #return bytes(header + payload)
-        return
+        return SCHC_Parser.build(self.headers, payload)
 
     @staticmethod
     def checksum(pseudo_header, udp_length, udp_source_port, udp_destination_port, udp_data):

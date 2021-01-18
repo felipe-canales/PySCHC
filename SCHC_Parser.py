@@ -40,3 +40,91 @@ class SCHC_Parser:
             return False
 
         return True
+
+    @staticmethod
+    def build(headers, payload):
+        data_buffer = bytearray(48)
+
+        # Mask definition
+        mask_byte = int('FF', 16)
+        mask_low = int('0F', 16)
+
+        # IPv6 Header
+        # version
+        data_buffer[0] = headers["IPv6.version"] << 4
+        
+        # traffic class
+        data_buffer[0] += headers["IPv6.trafficClass"] >> 4
+        data_buffer[1] = (headers["IPv6.trafficClass"] & mask_low) << 4
+        
+        # flow label
+        data_buffer[1] += headers["IPv6.flowLabel"] >> 16
+        data_buffer[2] = (headers["IPv6.flowLabel"] >> 8) & mask_byte
+        data_buffer[3] = headers["IPv6.flowLabel"] & mask_byte
+
+        # payload length
+        data_buffer[4] = headers["IPv6.payloadLength"] >> 8
+        data_buffer[5] = headers["IPv6.payloadLength"] & mask_byte
+
+        # next header
+        data_buffer[6] = headers["IPv6.nextHeader"]
+
+        # hop limit
+        data_buffer[7] = headers["IPv6.hopLimit"]
+
+        # source address
+        data_buffer[8] = headers["IPv6.prefixES"] >> 56
+        data_buffer[9] = (headers["IPv6.prefixES"] >> 48) & mask_byte
+        data_buffer[10] = (headers["IPv6.prefixES"] >> 40) & mask_byte
+        data_buffer[11] = (headers["IPv6.prefixES"] >> 32) & mask_byte
+        data_buffer[12] = (headers["IPv6.prefixES"] >> 24) & mask_byte
+        data_buffer[13] = (headers["IPv6.prefixES"] >> 16) & mask_byte
+        data_buffer[14] = (headers["IPv6.prefixES"] >> 8) & mask_byte
+        data_buffer[15] = headers["IPv6.prefixES"] & mask_byte
+
+        data_buffer[16] = headers["IPv6.iidES"] >> 56
+        data_buffer[17] = (headers["IPv6.iidES"] >> 48) & mask_byte
+        data_buffer[18] = (headers["IPv6.iidES"] >> 40) & mask_byte
+        data_buffer[19] = (headers["IPv6.iidES"] >> 32) & mask_byte
+        data_buffer[20] = (headers["IPv6.iidES"] >> 24) & mask_byte
+        data_buffer[21] = (headers["IPv6.iidES"] >> 16) & mask_byte
+        data_buffer[22] = (headers["IPv6.iidES"] >> 8) & mask_byte
+        data_buffer[23] = headers["IPv6.iidES"] & mask_byte
+
+        # destination address
+        data_buffer[24] = headers["IPv6.prefixLA"] >> 56
+        data_buffer[25] = (headers["IPv6.prefixLA"] >> 48) & mask_byte
+        data_buffer[26] = (headers["IPv6.prefixLA"] >> 40) & mask_byte
+        data_buffer[27] = (headers["IPv6.prefixLA"] >> 32) & mask_byte
+        data_buffer[28] = (headers["IPv6.prefixLA"] >> 24) & mask_byte
+        data_buffer[29] = (headers["IPv6.prefixLA"] >> 16) & mask_byte
+        data_buffer[30] = (headers["IPv6.prefixLA"] >> 8) & mask_byte
+        data_buffer[31] = headers["IPv6.prefixLA"] & mask_byte
+
+        data_buffer[32] = headers["IPv6.iidLA"] >> 56
+        data_buffer[33] = (headers["IPv6.iidLA"] >> 48) & mask_byte
+        data_buffer[34] = (headers["IPv6.iidLA"] >> 40) & mask_byte
+        data_buffer[35] = (headers["IPv6.iidLA"] >> 32) & mask_byte
+        data_buffer[36] = (headers["IPv6.iidLA"] >> 24) & mask_byte
+        data_buffer[37] = (headers["IPv6.iidLA"] >> 16) & mask_byte
+        data_buffer[38] = (headers["IPv6.iidLA"] >> 8) & mask_byte
+        data_buffer[39] = headers["IPv6.iidLA"] & mask_byte
+
+        # UDP Header
+        # source port
+        data_buffer[40] = headers["UDP.devPort"] >> 8
+        data_buffer[41] = headers["UDP.devPort"] & mask_byte
+
+        # destination port
+        data_buffer[42] = headers["UDP.appPort"] >> 8
+        data_buffer[43] = headers["UDP.appPort"] & mask_byte
+
+        # length
+        data_buffer[44] = headers["UDP.length"] >> 8
+        data_buffer[45] = headers["UDP.length"] & mask_byte
+
+        # checksum
+        data_buffer[46] = headers["UDP.checksum"] >> 8
+        data_buffer[47] = headers["UDP.checksum"] & mask_byte
+
+        return bytes(data_buffer) + bytes(payload)
