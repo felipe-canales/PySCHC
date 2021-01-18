@@ -108,6 +108,17 @@ class SCHC_Decompressor:
 
         return
 
+    def shift_bytes(self, offset, array):
+        mask = 0xFF
+        if offset == 0:
+            return array
+        shifted = []
+        for i in range(len(array)-1):
+            #                     higher bits                   lower bits
+            shifted.append(((array[i] << offset) & mask) + (array[i+1] >> (8 - offset)))
+        return shifted
+        
+
     def builder(self, schc_packet, rule, direction):
         rules_calc = []
         offset = 0
@@ -139,6 +150,11 @@ class SCHC_Decompressor:
             if (di is 'Bi') or (di is direction):
                 self.DecompressionActions.get(cda)(fid, fl, fp, tv, schc_packet)
 
+        # do header
+        payload = self.shift_bytes(offset % 8, schc_packet[offset//8:])
+        #return bytes(header + payload)
+        return
+
     @staticmethod
     def checksum(pseudo_header, udp_length, udp_source_port, udp_destination_port, udp_data):
         if (len(udp_data)%4) == 3:
@@ -158,7 +174,7 @@ class SCHC_Decompressor:
         sum_inf = sum_total & 0x0000FFFF
         sum_final = (sum_sup >> 16) + sum_inf
         result = sum_final ^ int('FFFF', 16)
-        return struct.pack('>H', result)
+        return result
 
     @staticmethod
     def build_pseudo_header(src_ip, dest_ip, next_header, payload_len):

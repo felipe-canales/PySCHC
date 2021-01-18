@@ -88,9 +88,11 @@ class SCHC_Compressor:
 
         else:
             # Get Compression Residue
-            comp_res_bf = self.calc_compression_residue(self.parser.header_fields, self.rule_manager.get_rule_from_id(rule_id), direction)
+            comp_res_bf, bit_pos = self.calc_compression_residue(self.parser.header_fields, self.rule_manager.get_rule_from_id(rule_id), direction)
 
-            packet = b''.join([rule_id_bf, comp_res_bf, bytes(self.parser.udp_data[0])])
+            almost_packet = self.add_bits_to_array(comp_res_bf, bit_pos, self.parser.udp_data[0])
+
+            packet = b''.join([rule_id_bf, bytes(almost_packet)])
 
         print('SCHC Packet: ' + str(binascii.hexlify(packet)))
         #print('Lenght SCHC Packet: ' + str(len(packet)))
@@ -104,10 +106,20 @@ class SCHC_Compressor:
         return packet
 
 
+    def add_bits_to_array(self, array, offset, value):
+        mask = 0xFF
+        if offset % 8 == 0:
+            for byte in value:
+                array.append(byte)
+        else:
+            for byte in value:
+                array[-1] += byte >> (offset % 8)
+                array.append((byte << (8 - offset % 8)) & mask)
+        return array
+
     def calc_compression_residue(self, headers, rule, direction):
         buffer = []
         offset = 0
-        mask = 0xFF
         for fd in rule["content"]:
             for header in headers:
                 if header[0] == fd[0] and (direction == fd[3] or fd[3] == 'Bi'):
@@ -119,14 +131,9 @@ class SCHC_Compressor:
                     result = self.CompressionActions.get(cda)(length, tv, fv, mo)
                     if result is not None:
                         residue, res_length = result
-                        for byte in residue:
-                            if offset % 8 == 0:
-                                buffer.append(byte)
-                            else:
-                                buffer[-1] += byte >> (offset % 8)
-                                buffer.append((byte << (8 - offset % 8)) & mask)
+                        buffer = self.add_bits_to_array(buffer, offset, residue)
                         offset += res_length
                         # (offset + 7) // 8 = ceiling(offset / 8)
                         if len(buffer) > ((offset + 7) // 8):
                             buffer.pop()
-        return bytes(buffer)
+        return buffer, offset
