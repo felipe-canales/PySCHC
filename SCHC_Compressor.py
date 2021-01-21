@@ -85,6 +85,7 @@ class SCHC_Compressor:
         rule_id_bf = struct.pack(">B", rule_id)
         if rule_id == SCHC_RuleManager.RULE_ID_NOT_COMPRESSED:
             packet = b''.join([rule_id_bf, bytes(self.parser.unparsed_headers), bytes(self.parser.udp_data[0])])
+            unused_bits = 0
 
         else:
             # Get Compression Residue
@@ -93,6 +94,7 @@ class SCHC_Compressor:
             almost_packet = self.add_bits_to_array(comp_res_bf, bit_pos, self.parser.udp_data[0])
 
             packet = b''.join([rule_id_bf, bytes(almost_packet)])
+            unused_bits = 8 - (bit_pos % 8)
 
             print('SCHC Packet: ' + str(binascii.hexlify(packet)))
         
@@ -103,7 +105,7 @@ class SCHC_Compressor:
             temp = (pkg_len - hc_len) * 100 / pkg_len
             print('Porcentaje de compresion: %.2f%%' % temp)
 
-        return packet
+        return packet, unused_bits
 
 
     def add_bits_to_array(self, array, offset, value):

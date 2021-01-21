@@ -14,18 +14,38 @@ rm_network = SCHC_RuleManager()
 #rm_network.add_rule(rule_48)
 #rm_network.add_rule(rule_16)
 rm_network.add_rule(rule_test)
+rm_network.add_rule(rule_97)
+rm_network.add_rule(rule_98)
+rm_network.add_rule(rule_99)
 
 decompressor = SCHC_Decompressor(rm_network)
 
-print("Esperando paquete...")
+dirs = [
+    "Up",
+    "Up",
+    "Down",
+    "Up",
+    "Down",
+    "Up",
+    "Down",
+    "Up",
+    "Down",
+    "Up",
+    "Down",
+    "Up",
+    "Down"
+]
 
-with open("signal", "rb") as inp:
+for i in range(13):
+    print("Esperando paquete...")
+    inp = open("signal", "rb")
     schc_packet = inp.read()
+    inp.close()
 
-print('Recibido')
-print('SCHC Packet: ' + str(binascii.hexlify(schc_packet)))
-print('Lenght SCHC Packet: ' + str(len(schc_packet)))
+    print('Recibido')
+    print('SCHC Packet: ' + str(binascii.hexlify(schc_packet)))
+    print('Lenght SCHC Packet: ' + str(len(schc_packet)))
 
-ip_packet = decompressor.decompress(schc_packet, "Up")
+    ip_packet = decompressor.decompress(schc_packet, dirs[i])
 
-print('Paquete descomprimido: ' + str(binascii.hexlify(ip_packet)))
+    print('Paquete descomprimido: ' + str(binascii.hexlify(ip_packet)))
