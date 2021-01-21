@@ -94,14 +94,14 @@ class SCHC_Compressor:
 
             packet = b''.join([rule_id_bf, bytes(almost_packet)])
 
-        print('SCHC Packet: ' + str(binascii.hexlify(packet)))
-        #print('Lenght SCHC Packet: ' + str(len(packet)))
-        print("Largo Headers sin comprimir: " + str(len(self.parser.unparsed_headers)) + " bytes")
-        print("Largo Headers comprimido: " + str(len(comp_res_bf)) + " bytes")
-        hc_len = len(comp_res_bf)
-        pkg_len = len(self.parser.unparsed_headers)
-        temp = (pkg_len - hc_len) * 100 / pkg_len
-        print('Porcentaje de compresion: %.2f%%' % temp)
+            print('SCHC Packet: ' + str(binascii.hexlify(packet)))
+        
+            print("Largo Headers sin comprimir: " + str(len(self.parser.unparsed_headers)) + " bytes")
+            print("Largo Headers comprimido: " + str((bit_pos + 7) // 8) + " bytes")
+            hc_len = (bit_pos + 7) // 8
+            pkg_len = len(self.parser.unparsed_headers)
+            temp = (pkg_len - hc_len) * 100 / pkg_len
+            print('Porcentaje de compresion: %.2f%%' % temp)
 
         return packet
 

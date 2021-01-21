@@ -1,6 +1,7 @@
 import struct
 
 from SCHC_Parser import SCHC_Parser
+from SCHC_RuleManager import SCHC_RuleManager
 
 
 class SCHC_Decompressor:
@@ -99,6 +100,9 @@ class SCHC_Decompressor:
         # Get RuleID from SCHC Packet
         schc_packet_buff = list(schc_packet)
         rule_id = schc_packet_buff[0]
+        # Packet was not compressed
+        if rule_id == self.rule_manager.RULE_ID_NOT_COMPRESSED:
+            return schc_packet[1:]
 
         # Get Rule object from RuleID
         rule = self.rule_manager.get_rule_from_id(rule_id)
