@@ -159,7 +159,7 @@ class SCHC_RuleManager:
                             break
 
             if MO_is_false:
-                break
+                continue
             else:
                 return rule["ruleid"]
 
