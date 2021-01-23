@@ -29,10 +29,10 @@ class SCHC_Parser:
             else:
                 print("Unrecognized direction")
                 return False
-            self.header_fields["IPv6.prefixES", 1] = [data_buffer[dp+0] << 56 | data_buffer[dp+1] << 48 | data_buffer[dp+2] << 40 | data_buffer[dp+3] << 32 | data_buffer[dp+4] << 24 | data_buffer[dp+5] << 16 | data_buffer[dp+6] << 8 | data_buffer[dp+7], "fixed"]
-            self.header_fields["IPv6.iidES", 1] = [data_buffer[dp+8] << 56 | data_buffer[dp+9] << 48 | data_buffer[dp+10] << 40 | data_buffer[dp+11] << 32 | data_buffer[dp+12] << 24 | data_buffer[dp+13] << 16 | data_buffer[dp+14] << 8 | data_buffer[dp+15], "fixed"]
-            self.header_fields["IPv6.prefixLA", 1] = [data_buffer[ap+0] << 56 | data_buffer[ap+1] << 48 | data_buffer[ap+2] << 40 | data_buffer[ap+3] << 32 | data_buffer[ap+4] << 24 | data_buffer[ap+5] << 16 | data_buffer[ap+6] << 8 | data_buffer[ap+7], "fixed"]
-            self.header_fields["IPv6.iidLA", 1] = [data_buffer[ap+8] << 56 | data_buffer[ap+9] << 48 | data_buffer[ap+10] << 40 | data_buffer[ap+11] << 32 | data_buffer[ap+12] << 24 | data_buffer[ap+13] << 16 | data_buffer[ap+14] << 8 | data_buffer[ap+15], "fixed"]
+            self.header_fields["IPv6.devPrefix", 1] = [data_buffer[dp+0] << 56 | data_buffer[dp+1] << 48 | data_buffer[dp+2] << 40 | data_buffer[dp+3] << 32 | data_buffer[dp+4] << 24 | data_buffer[dp+5] << 16 | data_buffer[dp+6] << 8 | data_buffer[dp+7], "fixed"]
+            self.header_fields["IPv6.devIID", 1] = [data_buffer[dp+8] << 56 | data_buffer[dp+9] << 48 | data_buffer[dp+10] << 40 | data_buffer[dp+11] << 32 | data_buffer[dp+12] << 24 | data_buffer[dp+13] << 16 | data_buffer[dp+14] << 8 | data_buffer[dp+15], "fixed"]
+            self.header_fields["IPv6.appPrefix", 1] = [data_buffer[ap+0] << 56 | data_buffer[ap+1] << 48 | data_buffer[ap+2] << 40 | data_buffer[ap+3] << 32 | data_buffer[ap+4] << 24 | data_buffer[ap+5] << 16 | data_buffer[ap+6] << 8 | data_buffer[ap+7], "fixed"]
+            self.header_fields["IPv6.appIID", 1] = [data_buffer[ap+8] << 56 | data_buffer[ap+9] << 48 | data_buffer[ap+10] << 40 | data_buffer[ap+11] << 32 | data_buffer[ap+12] << 24 | data_buffer[ap+13] << 16 | data_buffer[ap+14] << 8 | data_buffer[ap+15], "fixed"]
 
             if self.header_fields["IPv6.nextHeader", 1][0] == 17:
                 self.header_fields["UDP.devPort", 1] = [data_buffer[40] << 8 | data_buffer[41], "fixed"]
@@ -91,42 +91,42 @@ class SCHC_Parser:
             print("Unrecognized direction")
             return False
         # source address
-        data_buffer[dp+0] = headers["IPv6.prefixES"] >> 56
-        data_buffer[dp+1] = (headers["IPv6.prefixES"] >> 48) & mask_byte
-        data_buffer[dp+2] = (headers["IPv6.prefixES"] >> 40) & mask_byte
-        data_buffer[dp+3] = (headers["IPv6.prefixES"] >> 32) & mask_byte
-        data_buffer[dp+4] = (headers["IPv6.prefixES"] >> 24) & mask_byte
-        data_buffer[dp+5] = (headers["IPv6.prefixES"] >> 16) & mask_byte
-        data_buffer[dp+6] = (headers["IPv6.prefixES"] >> 8) & mask_byte
-        data_buffer[dp+7] = headers["IPv6.prefixES"] & mask_byte
+        data_buffer[dp+0] = headers["IPv6.devPrefix"] >> 56
+        data_buffer[dp+1] = (headers["IPv6.devPrefix"] >> 48) & mask_byte
+        data_buffer[dp+2] = (headers["IPv6.devPrefix"] >> 40) & mask_byte
+        data_buffer[dp+3] = (headers["IPv6.devPrefix"] >> 32) & mask_byte
+        data_buffer[dp+4] = (headers["IPv6.devPrefix"] >> 24) & mask_byte
+        data_buffer[dp+5] = (headers["IPv6.devPrefix"] >> 16) & mask_byte
+        data_buffer[dp+6] = (headers["IPv6.devPrefix"] >> 8) & mask_byte
+        data_buffer[dp+7] = headers["IPv6.devPrefix"] & mask_byte
 
-        data_buffer[dp+8] = headers["IPv6.iidES"] >> 56
-        data_buffer[dp+9] = (headers["IPv6.iidES"] >> 48) & mask_byte
-        data_buffer[dp+10] = (headers["IPv6.iidES"] >> 40) & mask_byte
-        data_buffer[dp+11] = (headers["IPv6.iidES"] >> 32) & mask_byte
-        data_buffer[dp+12] = (headers["IPv6.iidES"] >> 24) & mask_byte
-        data_buffer[dp+13] = (headers["IPv6.iidES"] >> 16) & mask_byte
-        data_buffer[dp+14] = (headers["IPv6.iidES"] >> 8) & mask_byte
-        data_buffer[dp+15] = headers["IPv6.iidES"] & mask_byte
+        data_buffer[dp+8] = headers["IPv6.devIID"] >> 56
+        data_buffer[dp+9] = (headers["IPv6.devIID"] >> 48) & mask_byte
+        data_buffer[dp+10] = (headers["IPv6.devIID"] >> 40) & mask_byte
+        data_buffer[dp+11] = (headers["IPv6.devIID"] >> 32) & mask_byte
+        data_buffer[dp+12] = (headers["IPv6.devIID"] >> 24) & mask_byte
+        data_buffer[dp+13] = (headers["IPv6.devIID"] >> 16) & mask_byte
+        data_buffer[dp+14] = (headers["IPv6.devIID"] >> 8) & mask_byte
+        data_buffer[dp+15] = headers["IPv6.devIID"] & mask_byte
 
         # destination address
-        data_buffer[ap+0] = headers["IPv6.prefixLA"] >> 56
-        data_buffer[ap+1] = (headers["IPv6.prefixLA"] >> 48) & mask_byte
-        data_buffer[ap+2] = (headers["IPv6.prefixLA"] >> 40) & mask_byte
-        data_buffer[ap+3] = (headers["IPv6.prefixLA"] >> 32) & mask_byte
-        data_buffer[ap+4] = (headers["IPv6.prefixLA"] >> 24) & mask_byte
-        data_buffer[ap+5] = (headers["IPv6.prefixLA"] >> 16) & mask_byte
-        data_buffer[ap+6] = (headers["IPv6.prefixLA"] >> 8) & mask_byte
-        data_buffer[ap+7] = headers["IPv6.prefixLA"] & mask_byte
+        data_buffer[ap+0] = headers["IPv6.appPrefix"] >> 56
+        data_buffer[ap+1] = (headers["IPv6.appPrefix"] >> 48) & mask_byte
+        data_buffer[ap+2] = (headers["IPv6.appPrefix"] >> 40) & mask_byte
+        data_buffer[ap+3] = (headers["IPv6.appPrefix"] >> 32) & mask_byte
+        data_buffer[ap+4] = (headers["IPv6.appPrefix"] >> 24) & mask_byte
+        data_buffer[ap+5] = (headers["IPv6.appPrefix"] >> 16) & mask_byte
+        data_buffer[ap+6] = (headers["IPv6.appPrefix"] >> 8) & mask_byte
+        data_buffer[ap+7] = headers["IPv6.appPrefix"] & mask_byte
 
-        data_buffer[ap+8] = headers["IPv6.iidLA"] >> 56
-        data_buffer[ap+9] = (headers["IPv6.iidLA"] >> 48) & mask_byte
-        data_buffer[ap+10] = (headers["IPv6.iidLA"] >> 40) & mask_byte
-        data_buffer[ap+11] = (headers["IPv6.iidLA"] >> 32) & mask_byte
-        data_buffer[ap+12] = (headers["IPv6.iidLA"] >> 24) & mask_byte
-        data_buffer[ap+13] = (headers["IPv6.iidLA"] >> 16) & mask_byte
-        data_buffer[ap+14] = (headers["IPv6.iidLA"] >> 8) & mask_byte
-        data_buffer[ap+15] = headers["IPv6.iidLA"] & mask_byte
+        data_buffer[ap+8] = headers["IPv6.appIID"] >> 56
+        data_buffer[ap+9] = (headers["IPv6.appIID"] >> 48) & mask_byte
+        data_buffer[ap+10] = (headers["IPv6.appIID"] >> 40) & mask_byte
+        data_buffer[ap+11] = (headers["IPv6.appIID"] >> 32) & mask_byte
+        data_buffer[ap+12] = (headers["IPv6.appIID"] >> 24) & mask_byte
+        data_buffer[ap+13] = (headers["IPv6.appIID"] >> 16) & mask_byte
+        data_buffer[ap+14] = (headers["IPv6.appIID"] >> 8) & mask_byte
+        data_buffer[ap+15] = headers["IPv6.appIID"] & mask_byte
 
         # UDP Header
         # source port
