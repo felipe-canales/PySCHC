@@ -16,8 +16,10 @@ class SCHC_Compressor:
             "value-sent": self.ca_value_sent,
             "mapping-sent": self.ca_mapping_sent,
             "LSB": self.ca_lsb,
-            "compute-length": self.ca_not_sent,
-            "compute-checksum": self.ca_not_sent
+            "devIID": self.ca_send_nothing,
+            "appIID": self.ca_app_iid,
+            "compute-length": self.ca_send_nothing,
+            "compute-checksum": self.ca_send_nothing
         }
 
     def ca_not_sent(self, length, tv, fv, mo):
@@ -60,6 +62,12 @@ class SCHC_Compressor:
         val = fv[0] - (tv << length_resto)
         return self.__left_align_bits(length_resto, val)
 
+    def ca_send_nothing(self, length, tv, fv, mo): # used for deviid and compute-*. doesnt show warning
+        return None
+    
+    def ca_app_iid(self, length, tv, fv, mo):
+        raise NotImplementedError
+
     def __left_align_bits(self, length, value):
         length_cociente = length // 8
         length_resto = length % 8
@@ -78,7 +86,7 @@ class SCHC_Compressor:
 
     def compress(self, package, direction):
         # Parsing Package
-        self.parser.parser(package)
+        self.parser.parser(package, direction)
 
         # Get Rule ID
         rule_id = self.rule_manager.find_rule_from_headers(self.parser.header_fields, direction)

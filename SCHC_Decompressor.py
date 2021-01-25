@@ -1,4 +1,6 @@
 import struct
+import binascii
+from Crypto.Cipher import AES
 
 from SCHC_Parser import SCHC_Parser
 from SCHC_RuleManager import SCHC_RuleManager
@@ -16,6 +18,8 @@ class SCHC_Decompressor:
             "value-sent": self.da_value_sent,
             "mapping-sent": self.da_mapping_sent,
             "LSB": self.da_lsb,
+            "devIID": self.da_dev_iid,
+            "appIID": self.da_app_iid,
             "compute-length": self.da_compute_length,
             "compute-checksum": self.da_compute_checksum
         }
@@ -50,6 +54,40 @@ class SCHC_Decompressor:
         shift = fl - int(mo[4:-1])
         self.headers[fid] = (tv << shift) + self.__get_bits(schc_packet, shift, offset)
         return offset + shift
+
+    def da_dev_iid(self, fid, fl, fp, tv, mo, schc_packet = None, offset = 0):
+        # based on aes_cmac specified in RFC 4493
+        m = bytes([0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88]) # get devEUI
+        k = bytes([0x00,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF,0x00,0xAA,0xBB,0xCC,0xDD,0xEE,0xFF,0xAA,0xBB]) # get key
+        cipher = AES.new(k, AES.MODE_ECB)
+
+        # subkeys
+        rb = 0x87
+        k1 = list(cipher.encrypt(binascii.unhexlify("00000000000000000000000000000000")))
+        if (k1[0] >> 7) == 0:
+            k1 = self.shift_bytes(1, k1 + [0]) # shift left by 1
+        else:
+            k1 = self.shift_bytes(1, k1 + [0])
+            k1[15] = k1[15] ^ rb
+        if (k1[0] >> 7) == 0:
+            k2 = self.shift_bytes(1, k1 + [0])
+        else:
+            k2 = self.shift_bytes(1, k1 + [0])
+            k2[15] = k1 ^ rb
+        
+        # m padding and xor-ing
+        m = list(m + bytes([0x80,0,0,0,0,0,0,0]))
+        for i in range(16):
+            m[i] = m[i] ^ k2[i]
+        
+        # cmac
+        cmac = cipher.encrypt(bytes(m))
+        self.headers[fid] = int.from_bytes(cmac[:8], "big")
+
+        return offset
+
+    def da_app_iid(self, fid, fl, fp, tv, mo, schc_packet = None, offset = 0):
+        raise NotImplementedError
 
     def da_compute_length(self, fid, fl, fp, tv, schc_packet = None):
         if fid == "IPv6.payloadLength":
@@ -156,7 +194,7 @@ class SCHC_Decompressor:
             if (di is 'Bi') or (di is direction):
                 self.DecompressionActions.get(cda)(fid, fl, fp, tv, payload)
 
-        return SCHC_Parser.build(self.headers, payload)
+        return SCHC_Parser.build(self.headers, payload, di)
 
     @staticmethod
     def checksum(pseudo_header, udp_length, udp_source_port, udp_destination_port, udp_data):
