@@ -58,8 +58,7 @@ class SCHC_RuleManager:
 
         headers_keys = headers.keys()
         for rule in self.context:
-            """Si algún Header del paquete que se está examinando no puede coincidir con un FID de un Field Description,
-            la regla DEBE ser ignorada. """
+            # If a header of the current packet is not in the FIDs of the rule, the rule MUST be discarded
             flag = False
             for header in headers_keys:
                 coincidence = False
@@ -75,8 +74,7 @@ class SCHC_RuleManager:
             if flag:
                 continue
 
-            """Si algún Field Description en la Regla tiene un FID que no puede coincidir con uno de los headers del 
-            paquete que se está examinando, la Regla DEBE ser ignorada. """
+            # If an FID of the rule is not in the set of headers of the current packet, the rule MUST be discarded
             flag = False
             for content in rule["content"]:
                 coincidence = False
@@ -93,8 +91,7 @@ class SCHC_RuleManager:
             if flag:
                 continue
 
-            """Si algún header del paquete no puede coincidir con el FID y el DI de un Field Description, 
-            la Regla DEBE ser ignorada """
+            # If a pair (header, direction) of the current packet is not in the rule, the rule MUST be discarded
             flag = False
             for header in headers_keys:
                 coincidence = False
@@ -112,8 +109,7 @@ class SCHC_RuleManager:
             if flag:
                 continue
 
-            """Si algún header del paquete no puede coincidir con el FID, DI y FP de un Field Description, 
-            la Regla DEBE ser ignorada """
+            # If a tuple (header, direction, position) of the current packet is not in the rule, the rule MUST be discarded
             flag = False
             for header in headers_keys:
                 coincidence = False
@@ -132,11 +128,9 @@ class SCHC_RuleManager:
             if flag:
                 continue
 
-            """Una vez que cada header se ha asociado con un FID, DI y FP, el valor de cada Header se compara con el 
-            Valor objetivo correspondiente (TV) almacenado en la Regla para ese header específico, utilizando el 
-            operador correspondiente (MO) . Si cada valor del header satisface los correspondientes operadores 
-            coincidentes (MO) de una Regla (es decir, todos los resultados de MO son Verdaderos), esa Regla se usa 
-            para comprimir el encabezado. De lo contrario, la regla DEBE ser ignorada."""
+            # After associating each header value with a (FID, DI, FP) tuple, the matching operators (MO) are applied
+            # with the target value (TV) and the header value.
+            # If at least one MO returns false, the rule MUST be discarded
             # Looking MO
             MO_is_false = False
             for header in headers_keys:
@@ -163,4 +157,4 @@ class SCHC_RuleManager:
             else:
                 return rule["ruleid"]
 
-        return 250   # Esta Rule no debe existir, es para indicar que el paquete se envia sin comprimir
+        return self.RULE_ID_NOT_COMPRESSED

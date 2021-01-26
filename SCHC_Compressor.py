@@ -50,17 +50,17 @@ class SCHC_Compressor:
                     mapping = i
                     break
         
-        length_resto = 0
+        length_remain = 0
         while max_index > 0:
-            length_resto += 1
+            length_remain += 1
             max_index >>= 1
 
-        return self.__left_align_bits(length_resto, mapping)
+        return self.__left_align_bits(length_remain, mapping)
 
     def ca_lsb(self, length, tv, fv, mo):
-        length_resto = length - int(mo[4:-1]) # length - n_bits
-        val = fv[0] - (tv << length_resto)
-        return self.__left_align_bits(length_resto, val)
+        length_remain = length - int(mo[4:-1]) # length - n_bits
+        val = fv[0] - (tv << length_remain)
+        return self.__left_align_bits(length_remain, val)
 
     def ca_send_nothing(self, length, tv, fv, mo): # used for deviid and compute-*. doesnt show warning
         return None
@@ -70,17 +70,17 @@ class SCHC_Compressor:
 
     def __left_align_bits(self, length, value):
         length_cociente = length // 8
-        length_resto = length % 8
+        length_remain = length % 8
         mask = 0xFF
-        buff = bytearray(length_cociente + (1 if length_resto else 0))
+        buff = bytearray(length_cociente + (1 if length_remain else 0))
         
         # full bytes
         for i in range(length_cociente):
-            struct.pack_into(">B", buff, i, (value >> (length_resto + (length_cociente - i - 1) * 8)) & mask)
+            struct.pack_into(">B", buff, i, (value >> (length_remain + (length_cociente - i - 1) * 8)) & mask)
 
         # remaining bits
-        if length_resto != 0:
-            struct.pack_into(">B", buff, length_cociente, (value << (8 - length_resto)) & mask)
+        if length_remain != 0:
+            struct.pack_into(">B", buff, length_cociente, (value << (8 - length_remain)) & mask)
 
         return bytes(buff), length
 
@@ -99,19 +99,18 @@ class SCHC_Compressor:
             # Get Compression Residue
             comp_res_bf, bit_pos = self.calc_compression_residue(self.parser.header_fields, self.rule_manager.get_rule_from_id(rule_id), direction)
 
+            # Shift payload bytes
             almost_packet = self.add_bits_to_array(comp_res_bf, bit_pos, self.parser.udp_data[0])
 
             packet = b''.join([rule_id_bf, bytes(almost_packet)])
             unused_bits = 8 - (bit_pos % 8)
 
-            print('SCHC Packet: ' + str(binascii.hexlify(packet)))
-        
-            print("Largo Headers sin comprimir: " + str(len(self.parser.unparsed_headers)) + " bytes")
-            print("Largo Headers comprimido: " + str((bit_pos + 7) // 8) + " bytes")
+            print("Length of uncompressed headers: " + str(len(self.parser.unparsed_headers)) + " bytes")
+            print("Length of compressed headers: " + str((bit_pos + 7) // 8) + " bytes")
             hc_len = (bit_pos + 7) // 8
             pkg_len = len(self.parser.unparsed_headers)
             temp = (pkg_len - hc_len) * 100 / pkg_len
-            print('Porcentaje de compresion: %.2f%%' % temp)
+            print('Compression: %.2f%%' % temp)
 
         return packet, unused_bits
 
@@ -143,7 +142,7 @@ class SCHC_Compressor:
                         residue, res_length = result
                         buffer = self.add_bits_to_array(buffer, offset, residue)
                         offset += res_length
-                        # (offset + 7) // 8 = ceiling(offset / 8)
+                        # ceiling(offset / 8)
                         if len(buffer) > ((offset + 7) // 8):
                             buffer.pop()
         return buffer, offset
