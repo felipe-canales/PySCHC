@@ -1,51 +1,30 @@
-import binascii
+import socket, binascii
 
 from SCHC_Decompressor import SCHC_Decompressor
 from SCHC_RuleManager import SCHC_RuleManager
 from common import *
 
 rm_network = SCHC_RuleManager()
-#rm_network.add_rule(rule_64)
-#rm_network.add_rule(rule_32)
-#rm_network.add_rule(rule_62)
-#rm_network.add_rule(rule_63)
-#rm_network.add_rule(rule_30)
-#rm_network.add_rule(rule_31)
-#rm_network.add_rule(rule_48)
-#rm_network.add_rule(rule_16)
-rm_network.add_rule(rule_test)
 rm_network.add_rule(rule_97)
 rm_network.add_rule(rule_98)
 rm_network.add_rule(rule_99)
 
 decompressor = SCHC_Decompressor(rm_network)
 
-dirs = [
-    "Up",
-    "Up",
-    "Down",
-    "Up",
-    "Down",
-    "Up",
-    "Down",
-    "Up",
-    "Down",
-    "Up",
-    "Down",
-    "Up",
-    "Down"
-]
 
-for i in range(13):
-    print("Esperando paquete...")
-    inp = open("signal", "rb")
-    schc_packet = inp.read()
-    inp.close()
 
-    print('Recibido')
-    print('SCHC Packet: ' + str(binascii.hexlify(schc_packet)))
-    print('Lenght SCHC Packet: ' + str(len(schc_packet)))
+print("Esperando paquete...")
 
-    ip_packet = decompressor.decompress(schc_packet, dirs[i])
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.bind(("localhost", 8099))
+s.listen()
+c,a = s.accept()
+schc_packet = c.recv(2048)
 
-    print('Paquete descomprimido: ' + str(binascii.hexlify(ip_packet)))
+print("Paquete recibido")
+ip_packet = decompressor.decompress(schc_packet, "Up")
+
+OUT_PACKET = "demo2.txt"
+
+with open("packets/{}".format(OUT_PACKET),"wb") as pkt_file:
+    pkt_file.write(binascii.hexlify(ip_packet))
