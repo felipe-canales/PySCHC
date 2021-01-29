@@ -194,7 +194,7 @@ class SCHC_Decompressor:
             if (di is 'Bi') or (di is direction):
                 self.DecompressionActions.get(cda)(fid, fl, fp, tv, payload)
 
-        return SCHC_Parser.build(self.headers, payload, di)
+        return SCHC_Parser.build(self.headers, payload, direction)
 
     @staticmethod
     def checksum(pseudo_header, udp_length, udp_source_port, udp_destination_port, udp_data):
